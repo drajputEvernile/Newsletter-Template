@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { clampCount, getNewsletterData, MAX_NEWS_PER_SECTOR, SECTOR_ORDER } from "@/data/newsletterData";
 import { LAYOUTS } from "@/newsletter/layouts";
+import EmailPanel from "@/preview/EmailPanel";
 import TopBar from "@/preview/TopBar";
 
 const STORAGE_KEY = "newsletter-template:news-per-sector";
@@ -30,6 +31,7 @@ function initialCounts(): number[] {
 
 export default function App() {
   const [counts, setCounts] = useState(initialCounts);
+  const [emailOpen, setEmailOpen] = useState(false);
 
   useEffect(() => {
     const value = counts.join(",");
@@ -49,8 +51,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#eef4f8]">
-      <TopBar counts={counts} onChange={setCounts} />
+      <TopBar counts={counts} onChange={setCounts} onEmail={() => setEmailOpen(true)} />
       <Layout data={getNewsletterData(counts)} />
+      {emailOpen && <EmailPanel counts={counts} onClose={() => setEmailOpen(false)} />}
     </div>
   );
 }

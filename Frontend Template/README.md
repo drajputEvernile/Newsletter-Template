@@ -6,8 +6,11 @@ Standalone UI kit for designing the **newsletter itself** (not the email rendere
 ```bash
 cd "Frontend Template"
 npm install
-npm run dev        # http://localhost:1001
+npm run dev        # UI on http://localhost:1001 + email server on 127.0.0.1:1002
 ```
+
+The first `npm run dev` creates `server/.venv` and installs the email server's Python
+dependencies (needs Python 3.10+). Run `npm run setup:mail` to do that step on its own.
 
 ## What you get
 
@@ -36,9 +39,53 @@ if a design should only apply to one count. Styling is Tailwind plus the newslet
 `src/index.css` (345 / 650 / 900px widths, breakpoints at 621px and 1024px — keep these, the email
 uses the same ones).
 
+## Send a test email
+
+The **Send email** button in the top bar opens a popup: enter one or more addresses and the
+current format (the counts selected in the top bar) is sent as a real email, one email per address,
+through the Gmail API.
+
+- Rendering and sending are the production code, unchanged: `server/pipeline/shared/email_renderer.py`,
+  `gmail.py` and `newsletter_templates.py` are byte-for-byte copies of `backend/pipeline/shared/`
+  (same layout, same subject, prefixed `[Testing]`, same one-email-per-recipient send).
+  `config.py` and `utils.py` there are slim stand-ins for the backend ones.
+- The React layouts in `src/newsletter/` do not change the email: the email is separate Python/table HTML.
+  Email images load from `https://newsletter.evernile.com`, as in production. To change the email for a
+  format, edit its layout file below.
+- **Sender = folder name.** Put the mailbox's OAuth files in `server/credentials/<sender email>/`
+  (`credentials.json` and `token.json`); that folder name is the From address. With several folders,
+  set `GMAIL_SENDER_EMAIL` in `server/.env` to choose one, otherwise the first (alphabetical) is used.
+- At most 10 recipients per send (`MAX_RECIPIENTS` in `server/.env`). `server/credentials/*` is git-ignored;
+  these are real mailbox credentials, so share the folder only with people allowed to send as that mailbox.
+
+## Email layouts (per news-per-sector count)
+
+| News / sector | Email layout file |
+| --- | --- |
+| 1 | `server/email_layouts/layout_1.py` |
+| 2 | `server/email_layouts/layout_2.py` |
+| 3 | `server/email_layouts/layout_3.py` |
+| 4 | `server/email_layouts/layout_4.py` |
+| 5 | `server/email_layouts/layout_5.py` |
+
+Each file has one function, `render_body(sectors_raw)`, returning the `<tr>` rows between the masthead and
+footer. They all start identical to production. The send button renders with the layout matching the
+largest sector (as with the React layouts), so changing `layout_3.py` shows up when you send a 3-news
+format. Restart `npm run dev` after editing (the mail server does not auto-reload). Edit only these files:
+`server/pipeline/shared/` stays an unmodified copy of the backend (helpers such as `_img_cover`, `_hl`,
+`_bullets` can be imported from `pipeline.shared.email_renderer`).
+
+### Porting an email layout to the main app
+`npm run email:diff` shows what changed in `server/email_layouts/`. For each changed layout:
+1. Copy its `render_body` into `backend/pipeline/shared/email_renderer.py` as e.g. `_render_vertical_3`.
+2. Register it in `_RENDERERS` there under a new id (e.g. `"layout-3"`) and add that id to
+   `SUPPORTED_TEMPLATE_IDS` in `backend/pipeline/shared/newsletter_templates.py`.
+3. Where the backend renders a newsletter, choose the id from the largest sector's headline count
+   (`email_layouts/__init__.py: render_email` shows the rule).
+
 ## Not part of the newsletter
 
-`src/App.tsx` and `src/preview/` are the preview harness only (top bar, `?news=` handling).
+`src/App.tsx`, `src/preview/` and `server/` are the preview harness only.
 The deliverable is `src/newsletter/` + `src/types.ts`.
 
 ## Sample data

@@ -1,0 +1,5 @@
+fastapi>=0.115
+uvicorn>=0.34
+google-api-python-client>=2.194
+google-auth>=2.49
+google-auth-oauthlib>=1.3

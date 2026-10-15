@@ -5,6 +5,7 @@ import { LAYOUT_COUNTS, LAYOUTS } from "@/newsletter/layouts";
 type Props = {
   counts: number[];
   onChange: (counts: number[]) => void;
+  onEmail: () => void;
 };
 
 const btn = "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap";
@@ -12,7 +13,7 @@ const btnOn = "border-accent bg-accent text-accent-foreground";
 const btnOff = "border-border bg-card text-foreground hover:bg-muted";
 
 /** Preview-only toolbar. Not part of the newsletter — do not ship it. */
-export default function TopBar({ counts, onChange }: Props) {
+export default function TopBar({ counts, onChange, onEmail }: Props) {
   const presets = [...LAYOUT_COUNTS].reverse();
   const uniform = counts.every((c) => c === counts[0]);
   const [customMode, setCustomMode] = useState(!uniform);
@@ -73,6 +74,13 @@ export default function TopBar({ counts, onChange }: Props) {
         <span className="ml-auto text-xs text-muted-foreground">
           Editing: <code className="rounded bg-muted px-1.5 py-0.5">{LAYOUTS[Math.max(...counts)]?.file}</code>
         </span>
+        <button
+          type="button"
+          className={`${btn} border-blue-600 bg-blue-600 text-white hover:bg-blue-700`}
+          onClick={onEmail}
+        >
+          Send email
+        </button>
       </div>
     </div>
   );
